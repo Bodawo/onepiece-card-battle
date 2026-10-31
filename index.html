@@ -1040,6 +1040,7 @@ function updateMySide(changeFunction) {
 
 // =====================================
 
+
 function playCard(index) {
 
   if (!privateRef) return;
@@ -1048,13 +1049,20 @@ function playCard(index) {
 
   privateRef.transaction((current) => {
 
-    if (!Array.isArray(current) || !current[index]) {
+    // Firebaseから取得した手札を配列に統一
+    const hand = Array.isArray(current)
+      ? current
+      : current && typeof current === "object"
+        ? Object.keys(current)
+            .sort((a, b) => Number(a) - Number(b))
+            .map(key => current[key])
+        : [];
 
+    if (!hand[index]) {
       return;
-
     }
 
-    const updated = current.slice();
+    const updated = hand.slice();
 
     selectedCard = updated.splice(index, 1)[0];
 
@@ -1063,19 +1071,18 @@ function playCard(index) {
   }, (error, committed) => {
 
     if (error) {
-
       message("手札更新エラー：" + error.message);
-
       return;
-
     }
 
-    if (!committed || !selectedCard) return;
+    if (!committed || !selectedCard) {
+      message("カードを出せませんでした。");
+      return;
+    }
 
     if (selectedCard.type === "event") {
 
       message("イベントを使用しました。効果処理は未実装です。");
-
       return;
 
     }
@@ -1083,13 +1090,9 @@ function playCard(index) {
     updateMySide((side) => {
 
       side.characters.push({
-
         name: selectedCard.name,
-
         detail: selectedCard.detail,
-
         rested: false
-
       });
 
     });
