@@ -1055,14 +1055,18 @@ function updateMySide(changeFunction) {
 
 // =====================================
 
-
 function playCard(index) {
 
-  if (!privateRef || !publicRef || !mySlot) return;
+  if (!privateRef || !publicRef || !mySlot) {
+    message("ルームに接続されていません。");
+    return;
+  }
 
-  let selectedCard = null;
+  const handRef = privateRef;
 
-  privateRef.transaction((current) => {
+  handRef.once("value").then((snapshot) => {
+
+    const current = snapshot.val();
 
     const hand = Array.isArray(current)
       ? current
@@ -1072,24 +1076,10 @@ function playCard(index) {
             .map(key => current[key])
         : [];
 
-    if (!hand[index]) {
-      return;
-    }
+    const selectedCard = hand[index];
 
-    const updated = hand.slice();
-    selectedCard = updated.splice(index, 1)[0];
-
-    return updated;
-
-  }, (error, committed) => {
-
-    if (error) {
-      message("手札更新エラー：" + error.message);
-      return;
-    }
-
-    if (!committed || !selectedCard) {
-      message("カードを出せませんでした。");
+    if (!selectedCard) {
+      message("カードが見つかりません。");
       return;
     }
 
@@ -1098,13 +1088,15 @@ function playCard(index) {
       return;
     }
 
-    publicRef.transaction((current) => {
+    message("キャラクターを盤面に追加しています...");
 
-      if (!current || !current.players || !current.players[mySlot]) {
+    publicRef.transaction((board) => {
+
+      if (!board || !board.players || !board.players[mySlot]) {
         return;
       }
 
-      const side = current.players[mySlot];
+      const side = board.players[mySlot];
 
       if (!Array.isArray(side.characters)) {
         side.characters = [];
@@ -1116,28 +1108,63 @@ function playCard(index) {
         rested: false
       });
 
-      return current;
+      return board;
 
-    }, (boardError, boardCommitted) => {
+    }, (error, committed) => {
 
-      if (boardError) {
-        message("盤面更新エラー：" + boardError.message);
+      if (error) {
+        message("盤面更新エラー：" + error.message);
         return;
       }
 
-      if (!boardCommitted) {
+      if (!committed) {
         message("盤面への追加がキャンセルされました。");
         return;
       }
 
-      message("キャラクターを登場させました。");
+      handRef.transaction((currentHand) => {
+
+        const latestHand = Array.isArray(currentHand)
+          ? currentHand
+          : currentHand && typeof currentHand === "object"
+            ? Object.keys(currentHand)
+                .sort((a, b) => Number(a) - Number(b))
+                .map(key => currentHand[key])
+            : [];
+
+        if (!latestHand[index]) {
+          return;
+        }
+
+        const updatedHand = latestHand.slice();
+        updatedHand.splice(index, 1);
+
+        return updatedHand;
+
+      }, (handError, handCommitted) => {
+
+        if (handError) {
+          message("盤面には追加済みですが、手札更新エラー：" + handError.message);
+          return;
+        }
+
+        if (!handCommitted) {
+          message("盤面には追加済みですが、手札を更新できませんでした。");
+          return;
+        }
+
+        message("キャラクターを登場させました！");
+      });
 
     });
+
+  }).catch((error) => {
+
+    message("カード取得エラー：" + error.message);
 
   });
 
 }
-
 // =====================================
 
 // 画面操作
