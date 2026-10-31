@@ -1048,13 +1048,12 @@ function updateMySide(changeFunction) {
 
 function playCard(index) {
 
-  if (!privateRef) return;
+  if (!privateRef || !publicRef || !mySlot) return;
 
   let selectedCard = null;
 
   privateRef.transaction((current) => {
 
-    // Firebaseから取得した手札を配列に統一
     const hand = Array.isArray(current)
       ? current
       : current && typeof current === "object"
@@ -1068,7 +1067,6 @@ function playCard(index) {
     }
 
     const updated = hand.slice();
-
     selectedCard = updated.splice(index, 1)[0];
 
     return updated;
@@ -1086,13 +1084,21 @@ function playCard(index) {
     }
 
     if (selectedCard.type === "event") {
-
       message("イベントを使用しました。効果処理は未実装です。");
       return;
-
     }
 
-    updateMySide((side) => {
+    publicRef.transaction((current) => {
+
+      if (!current || !current.players || !current.players[mySlot]) {
+        return;
+      }
+
+      const side = current.players[mySlot];
+
+      if (!Array.isArray(side.characters)) {
+        side.characters = [];
+      }
 
       side.characters.push({
         name: selectedCard.name,
@@ -1100,9 +1106,23 @@ function playCard(index) {
         rested: false
       });
 
-    });
+      return current;
 
-    message("キャラクターを登場させました。");
+    }, (boardError, boardCommitted) => {
+
+      if (boardError) {
+        message("盤面更新エラー：" + boardError.message);
+        return;
+      }
+
+      if (!boardCommitted) {
+        message("盤面への追加がキャンセルされました。");
+        return;
+      }
+
+      message("キャラクターを登場させました。");
+
+    });
 
   });
 
