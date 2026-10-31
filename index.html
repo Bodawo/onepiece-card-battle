@@ -1045,17 +1045,17 @@ function renderGame() {
 // =====================================
 
 function updateMySide(changeFunction) {
+
   if (!publicRef || !mySlot) {
     message("盤面更新エラー：接続情報がありません");
     return;
   }
 
-  publicRef.transaction((current) => {
-    if (!current || !current.players || !current.players[mySlot]) {
-      return;
-    }
+  const playerRef = publicRef.child("players/" + mySlot);
 
-    const side = current.players[mySlot];
+  playerRef.transaction((side) => {
+
+    if (!side) return;
 
     if (!Array.isArray(side.characters)) {
       side.characters = [];
@@ -1071,8 +1071,9 @@ function updateMySide(changeFunction) {
 
     changeFunction(side);
 
-    return current;
-  }, (error, committed, snapshot) => {
+    return side;
+
+  }, (error, committed) => {
 
     if (error) {
       message("盤面更新エラー：" + error.code + " / " + error.message);
@@ -1086,6 +1087,7 @@ function updateMySide(changeFunction) {
 
     message("盤面更新成功！");
   });
+
 }
 // =====================================
 
