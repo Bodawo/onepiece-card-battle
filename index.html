@@ -1007,33 +1007,38 @@ function renderGame() {
 // =====================================
 
 function updateMySide(changeFunction) {
-
   if (!publicRef || !mySlot) return;
 
   publicRef.transaction((current) => {
-
     if (!current || !current.players || !current.players[mySlot]) {
-
       return;
-
     }
 
-    changeFunction(current.players[mySlot]);
+    const side = current.players[mySlot];
+
+    if (!Array.isArray(side.characters)) {
+      side.characters = [];
+    }
+
+    if (!Array.isArray(side.stage)) {
+      side.stage = [];
+    }
+
+    if (!Array.isArray(side.dons)) {
+      side.dons = [];
+    }
+
+    changeFunction(side);
 
     return current;
-
   }, (error, committed) => {
-
     if (error) {
-
       message("盤面更新エラー：" + error.message);
-
+    } else if (!committed) {
+      message("盤面更新がキャンセルされました。");
     }
-
   });
-
 }
-
 // =====================================
 
 // 手札を使用
