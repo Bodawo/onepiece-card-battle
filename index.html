@@ -747,32 +747,32 @@ function escapeHtml(value) {
 
 // =====================================
 
-function cardHtml(name, detail, rested, action, index, disabled) {
+function cardHtml(name, detail, rested, action, index, disabled, power) {
+
+  const powerHtml = power !== undefined && power !== null
+    ? `<small>パワー ${escapeHtml(power)}</small>`
+    : "";
 
   return `
 
     <button
-
       class="card ${rested ? "rested" : ""}"
-
       data-action="${action}"
-
       data-index="${index}"
-
       ${disabled ? "disabled" : ""}
-
     >
 
       ${escapeHtml(name)}
 
       <small>${escapeHtml(detail || "")}</small>
 
+      ${powerHtml}
+
     </button>
 
   `;
-
 }
-
+  
 // =====================================
 
 // プレイヤー画面
@@ -791,7 +791,7 @@ function sideHtml(side, title, slot, isMine) {
 
       card.name,
 
-      card.detail,
+      card.cost != null ? "コスト " + card.cost : card.detail,
 
       card.rested,
 
@@ -799,7 +799,9 @@ function sideHtml(side, title, slot, isMine) {
 
       index,
 
-      disabled
+      disabled,
+
+      card.power
 
     );
 
@@ -858,19 +860,13 @@ function sideHtml(side, title, slot, isMine) {
       <div class="info">
 
         <span>
-
           ライフ：
-
           <b>${side.life}</b>
-
         </span>
 
         <span>
-
           DON!!：
-
           ${(side.dons || []).length}枚
-
         </span>
 
       </div>
@@ -926,21 +922,15 @@ function sideHtml(side, title, slot, isMine) {
         <div class="controls">
 
           <button data-action="addDon">
-
             DON!!を追加
-
           </button>
 
           <button data-action="life" data-value="-1">
-
             ライフを減らす
-
           </button>
 
           <button data-action="life" data-value="1">
-
             ライフを増やす
-
           </button>
 
         </div>
@@ -952,7 +942,7 @@ function sideHtml(side, title, slot, isMine) {
   `;
 
 }
-
+  
 // =====================================
 
 // ゲーム画面描画
@@ -979,7 +969,7 @@ function renderGame() {
 
       card.name,
 
-      card.detail,
+      card.cost != null ? "コスト " + card.cost : card.detail,
 
       false,
 
@@ -987,7 +977,9 @@ function renderGame() {
 
       index,
 
-      false
+      false,
+
+      card.power
 
     );
 
@@ -1020,7 +1012,7 @@ function renderGame() {
   `;
 
 }
-
+  
 // =====================================
 
 // 自分の盤面を更新
