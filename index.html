@@ -14,93 +14,205 @@
 
 <style>
 
-* { box-sizing:border-box; }
+* { box-sizing: border-box; }
 
 body {
 
-  margin:0; padding:12px;
+  margin: 0;
 
-  background:#14251f; color:white;
+  padding: 12px;
 
-  font-family:Arial,sans-serif;
+  background: #14251f;
+
+  color: white;
+
+  font-family: Arial, sans-serif;
 
 }
 
-h1 { text-align:center; font-size:21px; }
+h1 { text-align: center; font-size: 21px; }
 
-h2 { font-size:15px; margin:10px 0; }
+h2 { font-size: 15px; margin: 10px 0; }
 
-.player {
+.panel {
 
-  background:#254238; border-radius:12px;
+  background: #254238;
 
-  padding:12px; margin:10px 0;
+  border-radius: 12px;
+
+  padding: 12px;
+
+  margin: 10px 0;
 
 }
 
 .info {
 
-  display:flex; justify-content:space-between;
+  display: flex;
 
-  align-items:center; font-size:13px;
+  justify-content: space-between;
+
+  align-items: center;
+
+  font-size: 13px;
+
+  gap: 8px;
+
+  flex-wrap: wrap;
 
 }
 
 .zone {
 
-  display:flex; flex-wrap:wrap; gap:8px;
+  display: flex;
 
-  min-height:95px; padding:8px;
+  flex-wrap: wrap;
 
-  background:#18352c; border-radius:8px;
+  gap: 8px;
+
+  min-height: 75px;
+
+  padding: 8px;
+
+  background: #18352c;
+
+  border-radius: 8px;
 
 }
 
 .card {
 
-  width:68px; height:92px;
+  width: 68px;
 
-  border:2px solid #e5c77b;
+  min-height: 92px;
 
-  border-radius:7px; background:#e8d7ac;
+  border: 2px solid #e5c77b;
 
-  color:#222; padding:5px;
+  border-radius: 7px;
 
-  display:flex; flex-direction:column;
+  background: #e8d7ac;
 
-  justify-content:space-between;
+  color: #222;
 
-  text-align:center; font-size:11px;
+  padding: 5px;
 
-  font-weight:bold; cursor:pointer;
+  display: flex;
 
-  touch-action:manipulation;
+  flex-direction: column;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  text-align: center;
+
+  font-size: 11px;
+
+  font-weight: bold;
+
+  cursor: pointer;
+
+  touch-action: manipulation;
 
 }
 
-.card small { font-size:9px; }
+.card small { font-size: 9px; }
 
-.card.rested { transform:rotate(90deg); }
+.card.rested { transform: rotate(90deg); }
 
-.leader { background:#d9b46d; }
+.card.leader { background: #d9b46d; }
 
-.don { background:#dce8ed; border-color:#75b6dc; }
+.card.don { background: #dce8ed; border-color: #75b6dc; }
 
 button {
 
-  background:#e5b94f; border:0;
+  background: #e5b94f;
 
-  border-radius:7px; padding:10px;
+  border: 0;
 
-  font-weight:bold; color:#222;
+  border-radius: 7px;
 
-  margin:3px; cursor:pointer;
+  padding: 10px;
+
+  font-weight: bold;
+
+  color: #222;
+
+  margin: 3px;
+
+  cursor: pointer;
 
 }
 
-.controls { display:flex; flex-wrap:wrap; gap:4px; }
+button:disabled {
 
-#message { color:#f5d98b; font-size:12px; }
+  opacity: 0.6;
+
+  cursor: default;
+
+}
+
+input {
+
+  width: 100%;
+
+  padding: 12px;
+
+  border-radius: 7px;
+
+  border: 1px solid #aaa;
+
+  margin: 6px 0;
+
+  font-size: 16px;
+
+}
+
+.controls {
+
+  display: flex;
+
+  flex-wrap: wrap;
+
+  gap: 4px;
+
+}
+
+#message {
+
+  color: #f5d98b;
+
+  font-size: 13px;
+
+  min-height: 20px;
+
+  overflow-wrap: anywhere;
+
+}
+
+.hidden { display: none !important; }
+
+.room-code {
+
+  font-size: 20px;
+
+  font-weight: bold;
+
+  letter-spacing: 2px;
+
+  overflow-wrap: anywhere;
+
+}
+
+.notice {
+
+  color: #d8e9df;
+
+  font-size: 12px;
+
+  line-height: 1.6;
+
+}
 
 </style>
 
@@ -110,115 +222,185 @@ button {
 
 <h1>ONE PIECE CARD BATTLE</h1>
 
-<p id="message">自分のターン：カードを操作してください。</p>
+<p id="message">Firebaseに接続しています...</p>
 
-<section class="player">
+<!-- ロビー -->
 
-  <h2>対戦相手</h2>
+<section id="lobby" class="panel hidden">
 
-  <div class="info">
+  <h2>オンライン対戦</h2>
 
-    <span>相手のライフ：<b id="enemyLife">5</b></span>
+  <p class="notice">
 
-    <span>相手のDON!!：10枚</span>
+    ルームを作成して友人にルームIDを共有してください。
+
+  </p>
+
+  <button id="createRoomButton">対戦ルームを作成</button>
+
+  <hr>
+
+  <h2>友人のルームに参加</h2>
+
+  <input
+
+    id="roomInput"
+
+    type="text"
+
+    placeholder="ルームIDを入力"
+
+    autocomplete="off"
+
+  >
+
+  <button id="joinRoomButton">ルームに参加</button>
+
+</section>
+
+<!-- 対戦画面 -->
+
+<section id="roomPanel" class="hidden">
+
+  <div class="panel">
+
+    <h2>対戦ルーム</h2>
+
+    <div class="room-code" id="roomCode"></div>
+
+    <button id="copyRoomButton">ルームIDをコピー</button>
+
+    <button id="leaveRoomButton">退出</button>
+
+    <p class="notice">
+
+      このIDを対戦相手に共有してください。
+
+    </p>
 
   </div>
 
-  <h2>リーダー</h2>
-
-  <div class="zone">
-
-    <div class="card leader">相手リーダー<small>5000</small></div>
-
-  </div>
-
-  <h2>キャラクター</h2>
-
-  <div class="zone">
-
-    <div class="card" onclick="toggleCard(this)">相手キャラA<small>6000</small></div>
-
-    <div class="card" onclick="toggleCard(this)">相手キャラB<small>5000</small></div>
-
-  </div>
+  <div id="gameBoard"></div>
 
 </section>
 
-<section class="player">
+<!-- Firebase SDK -->
 
-  <h2>自分のフィールド</h2>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 
-  <div class="info">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 
-    <span>ライフ：<b id="myLife">5</b></span>
-
-    <span>手札：<b id="handCount">5</b>枚</span>
-
-  </div>
-
-  <h2>リーダー</h2>
-
-  <div class="zone" id="leaderZone">
-
-    <div class="card leader" onclick="toggleCard(this)">自分のリーダー<small>5000</small></div>
-
-  </div>
-
-  <h2>キャラクター</h2>
-
-  <div class="zone" id="characterZone"></div>
-
-  <h2>ステージ</h2>
-
-  <div class="zone" id="stageZone"></div>
-
-  <h2>DON!!カード</h2>
-
-  <div class="zone" id="donZone"></div>
-
-  <div class="controls">
-
-    <button onclick="addDon()">DON!!を追加</button>
-
-    <button onclick="restDon()">DON!!をレスト</button>
-
-    <button onclick="activeDon()">DON!!をアクティブ</button>
-
-  </div>
-
-  <h2>手札</h2>
-
-  <div class="zone" id="handZone">
-
-    <div class="card" onclick="playCard(this)">キャラA<small>コスト4</small></div>
-
-    <div class="card" onclick="playCard(this)">キャラB<small>コスト3</small></div>
-
-    <div class="card" onclick="playCard(this)">イベントA<small>コスト2</small></div>
-
-    <div class="card" onclick="playCard(this)">キャラC<small>コスト5</small></div>
-
-    <div class="card" onclick="playCard(this)">キャラD<small>コスト2</small></div>
-
-  </div>
-
-  <div class="controls">
-
-    <button onclick="changeLife(-1)">ライフを減らす</button>
-
-    <button onclick="changeLife(1)">ライフを増やす</button>
-
-  </div>
-
-</section>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 
 <script>
 
-let donCount = 0;
+// =====================================
 
-let donRested = 0;
+// Firebase設定
 
-let life = 5;
+// =====================================
+
+const firebaseConfig = {
+
+  apiKey: "AIzaSyAlRBKaNszF0N-8ZByN9LdzPhFiakeRBm4",
+
+  authDomain: "onepiece-card-battle.firebaseapp.com",
+
+  databaseURL: "https://onepiece-card-battle-default-rtdb.asia-southeast1.firebasedatabase.app",
+
+  projectId: "onepiece-card-battle",
+
+  storageBucket: "onepiece-card-battle.firebasestorage.app",
+
+  messagingSenderId: "604248634501",
+
+  appId: "1:604248634501:web:01fe8c0d4a7eed932065ec"
+
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+
+const database = firebase.database();
+
+let currentUid = null;
+
+let roomId = null;
+
+let mySlot = null;
+
+let gameState = null;
+
+let myHand = [];
+
+let publicRef = null;
+
+let privateRef = null;
+
+// =====================================
+
+// 初期カード
+
+// =====================================
+
+function initialHand() {
+
+  return [
+
+    { name: "キャラA", detail: "コスト4", type: "character" },
+
+    { name: "キャラB", detail: "コスト3", type: "character" },
+
+    { name: "イベントA", detail: "コスト2", type: "event" },
+
+    { name: "キャラC", detail: "コスト5", type: "character" },
+
+    { name: "キャラD", detail: "コスト2", type: "character" }
+
+  ];
+
+}
+
+function initialPlayer() {
+
+  return {
+
+    life: 5,
+
+    leaderRested: false,
+
+    characters: [],
+
+    stage: [],
+
+    dons: []
+
+  };
+
+}
+
+function initialPublicState() {
+
+  return {
+
+    players: {
+
+      host: initialPlayer(),
+
+      guest: initialPlayer()
+
+    }
+
+  };
+
+}
+
+// =====================================
+
+// メッセージ
+
+// =====================================
 
 function message(text) {
 
@@ -226,91 +408,817 @@ function message(text) {
 
 }
 
-function toggleCard(card) {
+// =====================================
 
-  card.classList.toggle("rested");
+// 匿名ログイン
 
-  message("カードのレスト状態を変更しました。");
+// =====================================
 
-}
+auth.onAuthStateChanged(async (user) => {
 
-function playCard(card) {
+  if (user) {
 
-  const name = card.firstChild.textContent;
+    currentUid = user.uid;
 
-  const zone = name.includes("ステージ")
+    document.getElementById("lobby").classList.remove("hidden");
 
-    ? document.getElementById("stageZone")
+    message("Firebase接続成功！対戦できます。");
 
-    : document.getElementById("characterZone");
+  } else {
 
-  const newCard = card.cloneNode(true);
+    try {
 
-  newCard.onclick = function() { toggleCard(this); };
+      await auth.signInAnonymously();
 
-  zone.appendChild(newCard);
+    } catch (error) {
 
-  card.remove();
+      message("ログインエラー：" + error.message);
 
-  document.getElementById("handCount").textContent =
+    }
 
-    document.getElementById("handZone").children.length;
+  }
 
-  message("カードをフィールドに出しました。");
+});
 
-}
+// =====================================
 
-function addDon() {
+// ルームID生成
 
-  if (donCount >= 10) return message("DON!!は最大10枚です。");
+// =====================================
 
-  donCount++;
+function createRoomId() {
 
-  const card = document.createElement("div");
+  const bytes = new Uint8Array(16);
 
-  card.className = "card don";
+  crypto.getRandomValues(bytes);
 
-  card.textContent = "DON!!";
+  return Array.from(bytes)
 
-  card.onclick = function() { toggleCard(this); };
+    .map(b => b.toString(16).padStart(2, "0"))
 
-  document.getElementById("donZone").appendChild(card);
-
-  message("DON!!を追加しました。");
+    .join("");
 
 }
 
-function restDon() {
+// =====================================
 
-  const cards = document.querySelectorAll("#donZone .card:not(.rested)");
+// ルーム作成
 
-  if (!cards.length) return message("レストできるDON!!がありません。");
+// =====================================
 
-  cards[0].classList.add("rested");
+document.getElementById("createRoomButton")
 
-  message("DON!!を1枚レストしました。");
+.addEventListener("click", async () => {
+
+  if (!currentUid) return;
+
+  const button = document.getElementById("createRoomButton");
+
+  button.disabled = true;
+
+  try {
+
+    const id = createRoomId();
+
+    const root = database.ref("rooms/" + id);
+
+    await root.child("meta/hostUid").set(currentUid);
+
+    await root.child("public").set(initialPublicState());
+
+    await root.child("private/" + currentUid).set(initialHand());
+
+    enterRoom(id, "host");
+
+  } catch (error) {
+
+    message("ルーム作成エラー：" + error.message);
+
+  } finally {
+
+    button.disabled = false;
+
+  }
+
+});
+
+// =====================================
+
+// ルーム参加
+
+// =====================================
+
+document.getElementById("joinRoomButton")
+
+.addEventListener("click", async () => {
+
+  if (!currentUid) return;
+
+  const id = document.getElementById("roomInput")
+
+    .value.trim().toLowerCase();
+
+  if (!/^[a-f0-9]{32}$/.test(id)) {
+
+    return message("ルームIDを正しく入力してください。");
+
+  }
+
+  const button = document.getElementById("joinRoomButton");
+
+  button.disabled = true;
+
+  try {
+
+    const root = database.ref("rooms/" + id);
+
+    const metaRef = root.child("meta");
+
+    const snapshot = await metaRef.once("value");
+
+    const meta = snapshot.val();
+
+    if (!meta || !meta.hostUid) {
+
+      throw new Error("ルームが見つかりません。");
+
+    }
+
+    if (meta.hostUid === currentUid) {
+
+      throw new Error("自分のルームには参加できません。");
+
+    }
+
+    if (meta.guestUid) {
+
+      throw new Error("このルームは満員です。");
+
+    }
+
+    await metaRef.child("guestUid").set(currentUid);
+
+    await root.child("private/" + currentUid).set(initialHand());
+
+    enterRoom(id, "guest");
+
+  } catch (error) {
+
+    message("参加エラー：" + error.message);
+
+  } finally {
+
+    button.disabled = false;
+
+  }
+
+});
+
+// =====================================
+
+// 対戦ルームに入る
+
+// =====================================
+
+function enterRoom(id, slot) {
+
+  roomId = id;
+
+  mySlot = slot;
+
+  publicRef = database.ref("rooms/" + roomId + "/public");
+
+  privateRef = database.ref(
+
+    "rooms/" + roomId + "/private/" + currentUid
+
+  );
+
+  document.getElementById("lobby").classList.add("hidden");
+
+  document.getElementById("roomPanel").classList.remove("hidden");
+
+  document.getElementById("roomCode").textContent = roomId;
+
+  publicRef.on("value", (snapshot) => {
+
+    gameState = snapshot.val();
+
+    if (gameState) {
+
+      renderGame();
+
+      message("対戦ルーム接続中");
+
+    }
+
+  }, (error) => {
+
+    message("盤面取得エラー：" + error.message);
+
+  });
+
+  privateRef.on("value", (snapshot) => {
+
+    myHand = snapshot.val() || [];
+
+    renderGame();
+
+  }, (error) => {
+
+    message("手札取得エラー：" + error.message);
+
+  });
 
 }
 
-function activeDon() {
+// =====================================
 
-  const cards = document.querySelectorAll("#donZone .card.rested");
+// 退出
 
-  if (!cards.length) return message("アクティブにできるDON!!がありません。");
+// =====================================
 
-  cards[0].classList.remove("rested");
+document.getElementById("leaveRoomButton")
 
-  message("DON!!を1枚アクティブにしました。");
+.addEventListener("click", () => {
+
+  if (publicRef) publicRef.off();
+
+  if (privateRef) privateRef.off();
+
+  publicRef = null;
+
+  privateRef = null;
+
+  roomId = null;
+
+  mySlot = null;
+
+  gameState = null;
+
+  myHand = [];
+
+  document.getElementById("roomPanel").classList.add("hidden");
+
+  document.getElementById("lobby").classList.remove("hidden");
+
+  message("ルームから退出しました。");
+
+});
+
+// =====================================
+
+// ルームIDコピー
+
+// =====================================
+
+document.getElementById("copyRoomButton")
+
+.addEventListener("click", async () => {
+
+  try {
+
+    await navigator.clipboard.writeText(roomId);
+
+    message("ルームIDをコピーしました。");
+
+  } catch (error) {
+
+    window.prompt("このIDをコピーしてください", roomId);
+
+  }
+
+});
+
+// =====================================
+
+// HTMLエスケープ
+
+// =====================================
+
+function escapeHtml(value) {
+
+  return String(value).replace(/[&<>"']/g, (char) => {
+
+    const map = {
+
+      "&": "&amp;",
+
+      "<": "&lt;",
+
+      ">": "&gt;",
+
+      '"': "&quot;",
+
+      "'": "&#39;"
+
+    };
+
+    return map[char];
+
+  });
 
 }
 
-function changeLife(amount) {
+// =====================================
 
-  life = Math.max(0, Math.min(10, life + amount));
+// カード表示
 
-  document.getElementById("myLife").textContent = life;
+// =====================================
+
+function cardHtml(name, detail, rested, action, index, disabled) {
+
+  return `
+
+    <button
+
+      class="card ${rested ? "rested" : ""}"
+
+      data-action="${action}"
+
+      data-index="${index}"
+
+      ${disabled ? "disabled" : ""}
+
+    >
+
+      ${escapeHtml(name)}
+
+      <small>${escapeHtml(detail || "")}</small>
+
+    </button>
+
+  `;
 
 }
+
+// =====================================
+
+// プレイヤー画面
+
+// =====================================
+
+function sideHtml(side, title, slot, isMine) {
+
+  const disabled = !isMine;
+
+  let characters = "";
+
+  (side.characters || []).forEach((card, index) => {
+
+    characters += cardHtml(
+
+      card.name,
+
+      card.detail,
+
+      card.rested,
+
+      "character",
+
+      index,
+
+      disabled
+
+    );
+
+  });
+
+  let stages = "";
+
+  (side.stage || []).forEach((card, index) => {
+
+    stages += cardHtml(
+
+      card.name,
+
+      card.detail,
+
+      card.rested,
+
+      "stage",
+
+      index,
+
+      disabled
+
+    );
+
+  });
+
+  let dons = "";
+
+  (side.dons || []).forEach((rested, index) => {
+
+    dons += cardHtml(
+
+      "DON!!",
+
+      "",
+
+      rested,
+
+      "don",
+
+      index,
+
+      disabled
+
+    );
+
+  });
+
+  return `
+
+    <section class="panel">
+
+      <h2>${title}</h2>
+
+      <div class="info">
+
+        <span>
+
+          ライフ：
+
+          <b>${side.life}</b>
+
+        </span>
+
+        <span>
+
+          DON!!：
+
+          ${(side.dons || []).length}枚
+
+        </span>
+
+      </div>
+
+      <h2>リーダー</h2>
+
+      <div class="zone">
+
+        ${cardHtml(
+
+          isMine ? "自分のリーダー" : "相手リーダー",
+
+          "5000",
+
+          side.leaderRested,
+
+          "leader",
+
+          0,
+
+          disabled
+
+        )}
+
+      </div>
+
+      <h2>キャラクター</h2>
+
+      <div class="zone">
+
+        ${characters}
+
+      </div>
+
+      <h2>ステージ</h2>
+
+      <div class="zone">
+
+        ${stages}
+
+      </div>
+
+      <h2>DON!!カード</h2>
+
+      <div class="zone">
+
+        ${dons}
+
+      </div>
+
+      ${isMine ? `
+
+        <div class="controls">
+
+          <button data-action="addDon">
+
+            DON!!を追加
+
+          </button>
+
+          <button data-action="life" data-value="-1">
+
+            ライフを減らす
+
+          </button>
+
+          <button data-action="life" data-value="1">
+
+            ライフを増やす
+
+          </button>
+
+        </div>
+
+      ` : ""}
+
+    </section>
+
+  `;
+
+}
+
+// =====================================
+
+// ゲーム画面描画
+
+// =====================================
+
+function renderGame() {
+
+  if (!gameState || !mySlot) return;
+
+  const opponentSlot = mySlot === "host" ? "guest" : "host";
+
+  const opponent = gameState.players[opponentSlot];
+
+  const mine = gameState.players[mySlot];
+
+  if (!opponent || !mine) return;
+
+  let handHtml = "";
+
+  myHand.forEach((card, index) => {
+
+    handHtml += cardHtml(
+
+      card.name,
+
+      card.detail,
+
+      false,
+
+      "play",
+
+      index,
+
+      false
+
+    );
+
+  });
+
+  document.getElementById("gameBoard").innerHTML = `
+
+    ${sideHtml(opponent, "対戦相手", opponentSlot, false)}
+
+    ${sideHtml(mine, "自分のフィールド", mySlot, true)}
+
+    <section class="panel">
+
+      <h2>自分の手札</h2>
+
+      <div class="info">
+
+        <span>手札：${myHand.length}枚</span>
+
+      </div>
+
+      <div class="zone">
+
+        ${handHtml}
+
+      </div>
+
+    </section>
+
+  `;
+
+}
+
+// =====================================
+
+// 自分の盤面を更新
+
+// =====================================
+
+function updateMySide(changeFunction) {
+
+  if (!publicRef || !mySlot) return;
+
+  publicRef.transaction((current) => {
+
+    if (!current || !current.players || !current.players[mySlot]) {
+
+      return;
+
+    }
+
+    changeFunction(current.players[mySlot]);
+
+    return current;
+
+  }, (error, committed) => {
+
+    if (error) {
+
+      message("盤面更新エラー：" + error.message);
+
+    }
+
+  });
+
+}
+
+// =====================================
+
+// 手札を使用
+
+// =====================================
+
+function playCard(index) {
+
+  if (!privateRef) return;
+
+  let selectedCard = null;
+
+  privateRef.transaction((current) => {
+
+    if (!Array.isArray(current) || !current[index]) {
+
+      return;
+
+    }
+
+    const updated = current.slice();
+
+    selectedCard = updated.splice(index, 1)[0];
+
+    return updated;
+
+  }, (error, committed) => {
+
+    if (error) {
+
+      message("手札更新エラー：" + error.message);
+
+      return;
+
+    }
+
+    if (!committed || !selectedCard) return;
+
+    if (selectedCard.type === "event") {
+
+      message("イベントを使用しました。効果処理は未実装です。");
+
+      return;
+
+    }
+
+    updateMySide((side) => {
+
+      side.characters.push({
+
+        name: selectedCard.name,
+
+        detail: selectedCard.detail,
+
+        rested: false
+
+      });
+
+    });
+
+    message("キャラクターを登場させました。");
+
+  });
+
+}
+
+// =====================================
+
+// 画面操作
+
+// =====================================
+
+document.getElementById("gameBoard")
+
+.addEventListener("click", (event) => {
+
+  const button = event.target.closest("button[data-action]");
+
+  if (!button || button.disabled) return;
+
+  const action = button.dataset.action;
+
+  const index = Number(button.dataset.index);
+
+  if (action === "play") {
+
+    playCard(index);
+
+    return;
+
+  }
+
+  if (action === "leader") {
+
+    updateMySide((side) => {
+
+      side.leaderRested = !side.leaderRested;
+
+    });
+
+    return;
+
+  }
+
+  if (action === "character") {
+
+    updateMySide((side) => {
+
+      if (side.characters[index]) {
+
+        side.characters[index].rested =
+
+          !side.characters[index].rested;
+
+      }
+
+    });
+
+    return;
+
+  }
+
+  if (action === "stage") {
+
+    updateMySide((side) => {
+
+      if (side.stage[index]) {
+
+        side.stage[index].rested =
+
+          !side.stage[index].rested;
+
+      }
+
+    });
+
+    return;
+
+  }
+
+  if (action === "don") {
+
+    updateMySide((side) => {
+
+      if (side.dons[index] !== undefined) {
+
+        side.dons[index] = !side.dons[index];
+
+      }
+
+    });
+
+    return;
+
+  }
+
+  if (action === "addDon") {
+
+    updateMySide((side) => {
+
+      if (side.dons.length < 10) {
+
+        side.dons.push(false);
+
+      }
+
+    });
+
+    return;
+
+  }
+
+  if (action === "life") {
+
+    const amount = Number(button.dataset.value);
+
+    updateMySide((side) => {
+
+      side.life = Math.max(0, Math.min(10, side.life + amount));
+
+    });
+
+  }
+
+});
 
 </script>
 
