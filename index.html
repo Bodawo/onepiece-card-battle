@@ -1,0 +1,319 @@
+
+
+<!DOCTYPE html>
+
+<html lang="ja">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<title>ONE PIECE CARD BATTLE</title>
+
+<style>
+
+* { box-sizing:border-box; }
+
+body {
+
+  margin:0; padding:12px;
+
+  background:#14251f; color:white;
+
+  font-family:Arial,sans-serif;
+
+}
+
+h1 { text-align:center; font-size:21px; }
+
+h2 { font-size:15px; margin:10px 0; }
+
+.player {
+
+  background:#254238; border-radius:12px;
+
+  padding:12px; margin:10px 0;
+
+}
+
+.info {
+
+  display:flex; justify-content:space-between;
+
+  align-items:center; font-size:13px;
+
+}
+
+.zone {
+
+  display:flex; flex-wrap:wrap; gap:8px;
+
+  min-height:95px; padding:8px;
+
+  background:#18352c; border-radius:8px;
+
+}
+
+.card {
+
+  width:68px; height:92px;
+
+  border:2px solid #e5c77b;
+
+  border-radius:7px; background:#e8d7ac;
+
+  color:#222; padding:5px;
+
+  display:flex; flex-direction:column;
+
+  justify-content:space-between;
+
+  text-align:center; font-size:11px;
+
+  font-weight:bold; cursor:pointer;
+
+  touch-action:manipulation;
+
+}
+
+.card small { font-size:9px; }
+
+.card.rested { transform:rotate(90deg); }
+
+.leader { background:#d9b46d; }
+
+.don { background:#dce8ed; border-color:#75b6dc; }
+
+button {
+
+  background:#e5b94f; border:0;
+
+  border-radius:7px; padding:10px;
+
+  font-weight:bold; color:#222;
+
+  margin:3px; cursor:pointer;
+
+}
+
+.controls { display:flex; flex-wrap:wrap; gap:4px; }
+
+#message { color:#f5d98b; font-size:12px; }
+
+</style>
+
+</head>
+
+<body>
+
+<h1>ONE PIECE CARD BATTLE</h1>
+
+<p id="message">自分のターン：カードを操作してください。</p>
+
+<section class="player">
+
+  <h2>対戦相手</h2>
+
+  <div class="info">
+
+    <span>相手のライフ：<b id="enemyLife">5</b></span>
+
+    <span>相手のDON!!：10枚</span>
+
+  </div>
+
+  <h2>リーダー</h2>
+
+  <div class="zone">
+
+    <div class="card leader">相手リーダー<small>5000</small></div>
+
+  </div>
+
+  <h2>キャラクター</h2>
+
+  <div class="zone">
+
+    <div class="card" onclick="toggleCard(this)">相手キャラA<small>6000</small></div>
+
+    <div class="card" onclick="toggleCard(this)">相手キャラB<small>5000</small></div>
+
+  </div>
+
+</section>
+
+<section class="player">
+
+  <h2>自分のフィールド</h2>
+
+  <div class="info">
+
+    <span>ライフ：<b id="myLife">5</b></span>
+
+    <span>手札：<b id="handCount">5</b>枚</span>
+
+  </div>
+
+  <h2>リーダー</h2>
+
+  <div class="zone" id="leaderZone">
+
+    <div class="card leader" onclick="toggleCard(this)">自分のリーダー<small>5000</small></div>
+
+  </div>
+
+  <h2>キャラクター</h2>
+
+  <div class="zone" id="characterZone"></div>
+
+  <h2>ステージ</h2>
+
+  <div class="zone" id="stageZone"></div>
+
+  <h2>DON!!カード</h2>
+
+  <div class="zone" id="donZone"></div>
+
+  <div class="controls">
+
+    <button onclick="addDon()">DON!!を追加</button>
+
+    <button onclick="restDon()">DON!!をレスト</button>
+
+    <button onclick="activeDon()">DON!!をアクティブ</button>
+
+  </div>
+
+  <h2>手札</h2>
+
+  <div class="zone" id="handZone">
+
+    <div class="card" onclick="playCard(this)">キャラA<small>コスト4</small></div>
+
+    <div class="card" onclick="playCard(this)">キャラB<small>コスト3</small></div>
+
+    <div class="card" onclick="playCard(this)">イベントA<small>コスト2</small></div>
+
+    <div class="card" onclick="playCard(this)">キャラC<small>コスト5</small></div>
+
+    <div class="card" onclick="playCard(this)">キャラD<small>コスト2</small></div>
+
+  </div>
+
+  <div class="controls">
+
+    <button onclick="changeLife(-1)">ライフを減らす</button>
+
+    <button onclick="changeLife(1)">ライフを増やす</button>
+
+  </div>
+
+</section>
+
+<script>
+
+let donCount = 0;
+
+let donRested = 0;
+
+let life = 5;
+
+function message(text) {
+
+  document.getElementById("message").textContent = text;
+
+}
+
+function toggleCard(card) {
+
+  card.classList.toggle("rested");
+
+  message("カードのレスト状態を変更しました。");
+
+}
+
+function playCard(card) {
+
+  const name = card.firstChild.textContent;
+
+  const zone = name.includes("ステージ")
+
+    ? document.getElementById("stageZone")
+
+    : document.getElementById("characterZone");
+
+  const newCard = card.cloneNode(true);
+
+  newCard.onclick = function() { toggleCard(this); };
+
+  zone.appendChild(newCard);
+
+  card.remove();
+
+  document.getElementById("handCount").textContent =
+
+    document.getElementById("handZone").children.length;
+
+  message("カードをフィールドに出しました。");
+
+}
+
+function addDon() {
+
+  if (donCount >= 10) return message("DON!!は最大10枚です。");
+
+  donCount++;
+
+  const card = document.createElement("div");
+
+  card.className = "card don";
+
+  card.textContent = "DON!!";
+
+  card.onclick = function() { toggleCard(this); };
+
+  document.getElementById("donZone").appendChild(card);
+
+  message("DON!!を追加しました。");
+
+}
+
+function restDon() {
+
+  const cards = document.querySelectorAll("#donZone .card:not(.rested)");
+
+  if (!cards.length) return message("レストできるDON!!がありません。");
+
+  cards[0].classList.add("rested");
+
+  message("DON!!を1枚レストしました。");
+
+}
+
+function activeDon() {
+
+  const cards = document.querySelectorAll("#donZone .card.rested");
+
+  if (!cards.length) return message("アクティブにできるDON!!がありません。");
+
+  cards[0].classList.remove("rested");
+
+  message("DON!!を1枚アクティブにしました。");
+
+}
+
+function changeLife(amount) {
+
+  life = Math.max(0, Math.min(10, life + amount));
+
+  document.getElementById("myLife").textContent = life;
+
+}
+
+</script>
+
+</body>
+
+</html>
