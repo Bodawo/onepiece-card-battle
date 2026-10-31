@@ -783,10 +783,31 @@ function cardHtml(name, detail, rested, action, index, disabled, power) {
 
 function sideHtml(side, title, slot, isMine) {
 
-  const disabled = !isMine;
+  const disabled = !isMine && !pendingAttack;
 
   let characters = "";
 
+  let attackButtons = "";
+
+  if (isMine) {
+    attackButtons += `
+      <button data-action="selectLeaderAttack"
+        ${side.leaderRested ? "disabled" : ""}>
+        リーダーで攻撃
+      </button>
+    `;
+
+    (side.characters || []).forEach((card, index) => {
+      attackButtons += `
+        <button data-action="selectCharacterAttack"
+          data-index="${index}"
+          ${card.rested ? "disabled" : ""}>
+          ${escapeHtml(card.name)}で攻撃
+        </button>
+      `;
+    });
+  }
+  
   (side.characters || []).forEach((card, index) => {
 
     characters += cardHtml(
@@ -797,11 +818,11 @@ function sideHtml(side, title, slot, isMine) {
 
       card.rested,
 
-      "character",
+      isMine ? "character" : "attackTargetCharacter",
 
       index,
 
-      disabled,
+      disabled || (!isMine && !card.rested),
 
       card.power
 
@@ -885,7 +906,7 @@ function sideHtml(side, title, slot, isMine) {
 
           side.leaderRested,
 
-          "leader",
+          isMine ? "leader" : "attackTargetLeader",
 
           0,
 
@@ -922,6 +943,8 @@ function sideHtml(side, title, slot, isMine) {
       ${isMine ? `
 
         <div class="controls">
+
+          ${attackButtons}
 
           <button data-action="addDon">
             DON!!を追加
@@ -1208,6 +1231,128 @@ document.getElementById("gameBoard")
 
   }
 
+  if (action === "selectLeaderAttack") {
+
+        pendingAttack = {
+      type: "leader"
+    };
+
+    renderGame();
+
+    message("攻撃する相手を選んでください。");
+
+    return;
+  }
+
+  if (action === "selectCharacterAttack") {
+
+        pendingAttack = {
+      type: "character",
+      index: index
+    };
+
+    renderGame();
+
+    message("攻撃する相手を選んでください。");
+
+    return;
+  }
+      if (
+    action === "attackTargetLeader" ||
+    action === "attackTargetCharacter"
+  ) {
+
+    if (!pendingAttack) return;
+
+    const attack = pendingAttack;
+
+    const opponentSlot = mySlot === "host" ? "guest" : "host";
+
+    publicRef.transaction((board) => {
+
+      if (!board || !board.players) return;
+
+      const mine = board.players[mySlot];
+      const opponent = board.players[opponentSlot];
+
+      if (!mine || !opponent) return;
+
+      let attackerPower = 0;
+
+      if (attack.type === "leader") {
+
+        if (mine.leaderRested) return;
+
+        attackerPower = 5000;
+
+      } else {
+
+        const attacker = mine.characters[attack.index];
+
+        if (!attacker || attacker.rested) return;
+
+        attackerPower = Number(attacker.power || 0);
+
+      }
+
+      if (action === "attackTargetLeader") {
+
+        if (attackerPower >= 5000) {
+          opponent.life = Math.max(0, opponent.life - 1);
+        }
+
+      } else {
+
+        const target = opponent.characters[index];
+
+        if (!target || !target.rested) return;
+
+        const targetPower = Number(target.power || 0);
+
+        if (attackerPower >= targetPower) {
+          opponent.characters.splice(index, 1);
+        }
+
+      }
+
+      if (attack.type === "leader") {
+
+        mine.leaderRested = true;
+
+      } else {
+
+        mine.characters[attack.index].rested = true;
+
+      }
+
+      return board;
+
+    }, (error, committed) => {
+
+      pendingAttack = null;
+
+      if (error) {
+        message("バトル処理エラー：" + error.message);
+        renderGame();
+        return;
+      }
+
+      if (!committed) {
+        message("攻撃できませんでした。");
+        renderGame();
+        return;
+      }
+
+      renderGame();
+
+      message("バトルが終了しました。");
+
+    });
+
+    return;
+
+  }
+  
   if (action === "leader") {
 
     updateMySide((side) => {
